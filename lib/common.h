@@ -1,3 +1,6 @@
+#ifndef __COMMON_H__
+#define __COMMON_H__
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -7,6 +10,8 @@
 #include <cstdio>
 #include <errno.h>
 #include <arpa/inet.h>
+
+ssize_t readline(int fd, void *vptr, size_t maxlen);
 
 #define SERV_PORT   9877
 #define MAXLINE     200     /* max text line length */
@@ -24,3 +29,5 @@
         printf(msg "\n");\
         exit(-1);\
     } while (false)
+
+#endif
