@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
+#include <sys/time.h>       /* timeval */
 #include <netinet/in.h>
 #include <strings.h>
 #include <unistd.h>
@@ -11,11 +12,12 @@
 #include <cstdio>
 #include <errno.h>
 #include <arpa/inet.h>
+#include <stdint.h>
 
 ssize_t readline(int fd, void *vptr, size_t maxlen);
 
 #define SERV_PORT   9877
-#define MAXLINE     200     /* max text line length */
+#define MAXLINE     4096     /* max text line length */
 #define	LISTENQ		1024	/* 2nd argument to listen() */
 
 #define assert_ret(no, msg) \
