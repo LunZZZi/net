@@ -56,3 +56,27 @@ readline(int fd, void *vptr, size_t maxlen)
     return n;
 }
 // ---- readline end
+
+size_t readn(int fd, void *buffer, size_t length) {
+    size_t count;
+    ssize_t nread;
+    char *ptr;
+
+    ptr = (char*)buffer;
+    count = length;
+    while (count > 0) {
+        nread = read(fd, ptr, count);
+
+        if (nread < 0) {
+            if (errno == EINTR)
+                continue;
+            else
+                return -1;
+        } else if (nread == 0)
+            break;                  /* EOF */
+        
+        count -= nread;
+        ptr += nread;
+    }
+    return length - count;
+}

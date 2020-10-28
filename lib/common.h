@@ -15,6 +15,7 @@
 #include <stdint.h>
 
 ssize_t readline(int fd, void *vptr, size_t maxlen);
+size_t readn(int fd, void *buffer, size_t length);
 
 #define SERV_PORT   9877
 #define MAXLINE     4096     /* max text line length */

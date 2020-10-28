@@ -12,3 +12,6 @@ cmake ..
 ## example
 
 - echo server
+- pingpong
+- echo2 报文格式
+- shutdown 半关闭
