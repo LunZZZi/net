@@ -4,12 +4,12 @@
 void write_message(int sockfd, MessageObject* message) {
     size_t len = 0;
     switch (message->message_type) {
-        case MSG_CD:
         case MSG_PWD:
         case MSG_LS:
         case MSG_RECV_CD:
             len = 0;
             break;
+        case MSG_CD:
         case MSG_RECV_LS:
         case MSG_RECV_PWD:
             len = strlen(message->buf);
@@ -56,7 +56,7 @@ size_t read_message(int fd, MessageObject* message) {
 
 void log_message(MessageObject* message) {
     printf("[%3d] [L%d] ", message->message_type, message->message_length);
-    if (message->message_type) {
+    if (message->message_length) {
         printf("content:%s", message->buf);
     }
     printf("\n");

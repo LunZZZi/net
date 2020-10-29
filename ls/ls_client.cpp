@@ -1,7 +1,10 @@
 #include "lib/common.h"
 #include "message.h"
 
+#define DEBUG 0
+
 MessageObject message;
+char path_buff[1024];
 
 int main(int argc, char const *argv[])
 {
@@ -24,10 +27,24 @@ int main(int argc, char const *argv[])
 
     int type;
     
-    while (fgets(message.buf, sizeof(message.buf), stdin) != NULL)
+    while (fgets(path_buff, sizeof(path_buff), stdin) != NULL)
     {
-        if (strncmp(message.buf, "pwd", 3) == 0) {
+        if (strncmp(path_buff, "pwd", 3) == 0) {
             type = MSG_PWD;
+        } else if (strncmp(path_buff, "ls", 2) == 0) {
+            type = MSG_LS;
+        } else if (strncmp("cd ", path_buff, 3 ) == 0) {
+            int i;
+            for (i = 3; path_buff[i] != 0; i++) {
+                if (path_buff[i] != ' ') {
+                    break;
+                }
+            }
+            strncpy(message.buf, path_buff + i, 1024);
+            size_t length = strlen(message.buf);
+            // remove \n
+            message.buf[length - 1] = 0;
+            type = MSG_CD;
         } else {
             type = 0;
         }
@@ -40,9 +57,32 @@ int main(int argc, char const *argv[])
                 message.message_type = type;
                 write_message(socket_fd, &message);
                 ret = read_message(socket_fd, &message);
+            #if DEBUG
                 log_message(&message);
+            #endif
                 assert_ret(ret, "read error");
                 printf("cwd: %s\n", message.buf);
+                break;
+            case MSG_LS:
+                message.message_type = type;
+                write_message(socket_fd, &message);
+                ret = read_message(socket_fd, &message);
+            #if DEBUG
+                log_message(&message);
+            #endif
+                assert_ret(ret, "read_error");
+                printf("%s\n", message.buf);
+                break;
+            case MSG_CD:
+                message.message_type = type;
+                // get path_buff
+                write_message(socket_fd, &message);
+                ret = read_message(socket_fd, &message);
+            #if DEBUG
+                log_message(&message);
+            #endif
+                assert_ret(ret, "read_error");
+                printf("cd success\n");
                 break;
             default:
                 printf("unknown type %d\n", type);

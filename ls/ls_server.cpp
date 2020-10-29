@@ -1,8 +1,10 @@
+#include <dirent.h>
 #include "lib/common.h"
 #include "message.h"
 
 static int count;
 static MessageObject message;
+static char path_buff[MAXLINE];
 
 static void sig_pipe(int signo)
 {
@@ -44,6 +46,11 @@ int main(int argc, char const *argv[])
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
 
+    DIR *dp;
+    struct dirent *dirp;
+    int start = 0;
+    int ret;
+
     while (true) {
         if ((connfd = accept(listenfd, 
                              (struct sockaddr *)&client_addr, 
@@ -65,11 +72,42 @@ int main(int argc, char const *argv[])
             count++;
 
             log_message(&message);
-            if (message.message_type == MSG_PWD) {
-                getcwd(message.buf, 1024);
-                printf("cwd: %s\n", message.buf);
-                message.message_type = (MSG_RECV_PWD);
-                write_message(connfd, &message);
+            switch (message.message_type) {
+                case MSG_PWD:
+                    getcwd(message.buf, 1024);
+                    printf("cwd: %s\n", message.buf);
+                    message.message_type = (MSG_RECV_PWD);
+                    write_message(connfd, &message);
+                    break;
+                case MSG_LS:
+                    message.message_type = MSG_RECV_LS;
+                    getcwd(path_buff, 1024);
+                    start = 0;
+                    if ((dp = opendir(path_buff)) == NULL) {
+                        strcpy(message.buf, "bad directory");
+                    } else {
+                        message.buf[0] = 0;
+                        while ((dirp = readdir(dp)) != NULL) {
+                            if (strcmp(dirp->d_name, ".") == 0 ||
+                                strcmp(dirp->d_name, "..") == 0)
+                                continue;
+                            if (start) strncat(message.buf, "\t", 1024);
+                            strncat(message.buf, dirp->d_name, 1024);
+                            start++;
+                        }
+                        closedir(dp);
+                    }
+                    write_message(connfd, &message);
+                    break;
+                case MSG_CD:
+                    message.message_type = MSG_RECV_CD;
+                    printf("cd \"%s\"\n", message.buf);
+                    ret = chdir(message.buf);
+                    printf("cd return %d\n", ret);
+                    write_message(connfd, &message);
+                    break;
+                default:
+                    break;
             }
         }
     }
