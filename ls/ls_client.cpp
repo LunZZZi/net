@@ -3,32 +3,6 @@
 
 MessageObject message;
 
-size_t read_message(int fd, char *buffer, size_t length, u_int32_t* msg_type) {
-    u_int32_t msg_length;
-    int rc;
-
-    rc = readn(fd, (char *) &msg_length, sizeof(u_int32_t));
-    if (rc != sizeof(u_int32_t))
-        return rc < 0 ? -1 : 0;
-    msg_length = ntohl(msg_length);
-
-    rc = readn(fd, (char *) msg_type, sizeof(u_int32_t));
-    if (rc != sizeof(u_int32_t))
-        return rc < 0 ? -1 : 0;
-    *msg_type = ntohl(*msg_type);
-
-    if (msg_length > length) {
-        return -1;
-    }
-
-    if (msg_length) {
-        rc = readn(fd, buffer, msg_length);
-        if (rc != msg_length)
-            return rc < 0 ? -1 : 0;
-    }
-    return rc;
-}
-
 int main(int argc, char const *argv[])
 {
     if (argc != 2)
@@ -48,13 +22,12 @@ int main(int argc, char const *argv[])
     int connect_rt = connect(socket_fd, (struct sockaddr *)&server_addr, server_len);
     assert_ret(connect_rt, "connect failed");
 
-    int len, type;
+    int type;
     
     while (fgets(message.buf, sizeof(message.buf), stdin) != NULL)
     {
         if (strncmp(message.buf, "pwd", 3) == 0) {
             type = MSG_PWD;
-            len = 0;
         } else {
             type = 0;
         }
@@ -64,10 +37,10 @@ int main(int argc, char const *argv[])
         switch (type)
         {
             case MSG_PWD:
-                message.message_length = htonl(len);
-                message.message_type = htonl(type);
-                writeMessage(socket_fd, &message, 0);
-                ret = read_message(socket_fd, message.buf, 1024, &message.message_type);
+                message.message_type = type;
+                write_message(socket_fd, &message);
+                ret = read_message(socket_fd, &message);
+                log_message(&message);
                 assert_ret(ret, "read error");
                 printf("cwd: %s\n", message.buf);
                 break;

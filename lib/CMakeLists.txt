@@ -1,5 +1,6 @@
 set(net_lib
     read.cpp
+    write.cpp
 )
 
 

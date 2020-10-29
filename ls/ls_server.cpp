@@ -10,32 +10,6 @@ static void sig_pipe(int signo)
     exit(0);
 }
 
-size_t read_message(int fd, char *buffer, size_t length, u_int32_t* msg_type) {
-    u_int32_t msg_length;
-    int rc;
-
-    rc = readn(fd, (char *) &msg_length, sizeof(u_int32_t));
-    if (rc != sizeof(u_int32_t))
-        return rc < 0 ? -1 : 0;
-    msg_length = ntohl(msg_length);
-
-    rc = readn(fd, (char *) msg_type, sizeof(u_int32_t));
-    if (rc != sizeof(u_int32_t))
-        return rc < 0 ? -1 : 0;
-    *msg_type = ntohl(*msg_type);
-
-    if (msg_length > length) {
-        return -1;
-    }
-
-    if (msg_length) {
-        rc = readn(fd, buffer, msg_length);
-        if (rc != msg_length)
-            return rc < 0 ? -1 : 0;
-    }
-    return rc;
-}
-
 int main(int argc, char const *argv[])
 {
     int listenfd;
@@ -70,33 +44,33 @@ int main(int argc, char const *argv[])
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
 
-    if ((connfd = accept(listenfd, (struct sockaddr *)&client_addr, &client_len)) < 0)
-    {
-        assert_ret(errno, "bind failed");
-    }
-
-    char buf[128];
-    count = 0;
-
-    while (1) {
-        int n = read_message(connfd, buf, sizeof(buf), &message.message_type);
-        if (n < 0) {
-            err_sys("error read message");
-        } else if (n == 0) {
-            err_sys("client closed");
+    while (true) {
+        if ((connfd = accept(listenfd, 
+                             (struct sockaddr *)&client_addr, 
+                             &client_len)) < 0)
+        {
+            assert_ret(errno, "bind failed");
         }
-        buf[n] = 0;
-        printf("received %d bytes: %s\n", n, buf);
-        count++;
 
-        printf("message_type %d\n", message.message_type);
-        if (message.message_type == MSG_PWD) {
-            getcwd(message.buf, 1024);
-            printf("cwd: %s\n", message.buf);
-            size_t len = strlen(message.buf);
-            message.message_type = htonl(MSG_PWD);
-            message.message_length = htonl(len);
-            writeMessage(connfd, &message, len);
+        count = 0;
+
+        while (1) {
+            int n = read_message(connfd, &message);
+            if (n < 0) {
+                err_sys("error read message");
+            } else if (n == 0) {
+                printf("client closed\n");
+                break;
+            }
+            count++;
+
+            log_message(&message);
+            if (message.message_type == MSG_PWD) {
+                getcwd(message.buf, 1024);
+                printf("cwd: %s\n", message.buf);
+                message.message_type = (MSG_RECV_PWD);
+                write_message(connfd, &message);
+            }
         }
     }
 

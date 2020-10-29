@@ -8,10 +8,15 @@ typedef struct {
     char buf[1024];
 } MessageObject;
 
-#define MSG_CD  1
-#define MSG_PWD 2
+#define MSG_CD          1
+#define MSG_PWD         2
+#define MSG_LS          3
+#define MSG_RECV_CD     101
+#define MSG_RECV_PWD    102
+#define MSG_RECV_LS     103
 
-void writeMessage(int, MessageObject*, size_t);
-void logMessage(MessageObject*);
+void write_message(int, MessageObject*);
+size_t read_message(int, MessageObject*);
+void log_message(MessageObject*);
 
 #endif

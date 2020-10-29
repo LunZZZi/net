@@ -16,6 +16,7 @@
 
 ssize_t readline(int fd, void *vptr, size_t maxlen);
 size_t readn(int fd, void *buffer, size_t length);
+ssize_t writen(int fd, const void *vptr, size_t n);
 
 #define SERV_PORT   9877
 #define MAXLINE     4096     /* max text line length */
