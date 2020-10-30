@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <sys/time.h>       /* timeval */
+#include <poll.h>
 #include <netinet/in.h>
 #include <strings.h>
 #include <unistd.h>
