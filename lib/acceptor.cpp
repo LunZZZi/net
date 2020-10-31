@@ -5,9 +5,9 @@ struct acceptor *acceptor_init(int port)
 {
     struct acceptor *acceptor1 = (struct acceptor *)malloc(sizeof(struct acceptor));
     acceptor1->listen_port = port;
-    acceptor1->listen_port = socket(AF_INET, SOCK_STREAM, 0);
+    acceptor1->listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 
-    make_nonblocking(acceptor1->listen_port);
+    make_nonblocking(acceptor1->listen_fd);
 
     struct sockaddr_in server_addr;
     bzero(&server_addr, sizeof(server_addr));
@@ -16,14 +16,14 @@ struct acceptor *acceptor_init(int port)
     server_addr.sin_port = htons(port);
 
     int on = 1;
-    setsockopt(acceptor1->listen_port, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+    setsockopt(acceptor1->listen_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
 
-    int rt1 = bind(acceptor1->listen_port, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    int rt1 = bind(acceptor1->listen_fd, (struct sockaddr *)&server_addr, sizeof(server_addr));
     if (rt1 < 0) {
         err_sys("bind failed");
     }
 
-    int rt2 = listen(acceptor1->listen_port, LISTENQ);
+    int rt2 = listen(acceptor1->listen_fd, LISTENQ);
     if (rt2 < 0) {
         err_sys("listen failed");
     }
