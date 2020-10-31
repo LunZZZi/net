@@ -6,6 +6,7 @@
 #include <sys/select.h>
 #include <sys/time.h>       /* timeval */
 #include <poll.h>
+#include <fcntl.h>          /* for nonblocking */
 #include <netinet/in.h>
 #include <strings.h>
 #include <unistd.h>
